@@ -327,7 +327,6 @@ class ACK(MeFrame):
         frame = frame_bytes.decode()
         self.CRC = int(frame[7:], 16)
 
-
 class DeviceError(MeFrame):
     """
     Queries failing return a device error, implemented as repsonse by this class.
@@ -445,7 +444,10 @@ class MeCom:
             else self.PARAMETERS.get_by_id(parameter_id)
 
     def _inc(self):
-        self.SEQUENCE_COUNTER += 1
+        if self.SEQUENCE_COUNTER == 65535:
+            self.SEQUENCE_COUNTER = 0
+        else:
+            self.SEQUENCE_COUNTER += 1
 
     @staticmethod
     def _raise(query):
@@ -457,7 +459,7 @@ class MeCom:
         # did we encounter an error?
         if type(query.RESPONSE) is DeviceError:
             code, description, symbol = query.RESPONSE.error()
-            raise ResponseException("device {} raised {}".format(query.RESPONSE.ADDRESS, description))
+            raise ResponseException("device {} raised {}".format(query.RESPONSE.ADDRESS, description))         
 
     def _read(self, size):
         """
